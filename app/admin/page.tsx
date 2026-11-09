@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 
 interface Coach {
   id?: string | number;
@@ -15,6 +16,8 @@ interface Coach {
   bio?: string;
   umur?: number;
   lokasi?: string;
+  username?: string;
+  password?: string;
 }
 
 interface Athlete {
@@ -31,6 +34,7 @@ interface Athlete {
 type TabType = 'pelatih' | 'atlet';
 
 export default function AdminPage() {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabType>('pelatih');
   const [coaches, setCoaches] = useState<Coach[]>([]);
   const [athletes, setAthletes] = useState<Athlete[]>([]);
@@ -42,7 +46,8 @@ export default function AdminPage() {
 
   const [coachForm, setCoachForm] = useState<Coach>({
     Nama: '', Foto: '', Certificate: '', spesialis: '',
-    certificates: [], pengalaman: '', bio: '', umur: undefined, lokasi: ''
+    certificates: [], pengalaman: '', bio: '', umur: undefined, lokasi: '',
+    username: '', password: ''
   });
   const [certInput, setCertInput] = useState('');
 
@@ -50,6 +55,13 @@ export default function AdminPage() {
     Nama: '', Foto: '', umur: undefined, kategori: '',
     spesialis: '', tingkat: '', catatan: ''
   });
+
+  useEffect(() => {
+    const isLoggedIn = localStorage.getItem('isAdminLoggedIn');
+    if (isLoggedIn !== 'true') {
+      router.push('/login');
+    }
+  }, [router]);
 
   const loadCoaches = async () => {
     const { data } = await supabase.from('coach').select('*').order('Nama');
@@ -74,7 +86,8 @@ export default function AdminPage() {
   const resetForm = () => {
     setCoachForm({
       Nama: '', Foto: '', Certificate: '', spesialis: '',
-      certificates: [], pengalaman: '', bio: '', umur: undefined, lokasi: ''
+      certificates: [], pengalaman: '', bio: '', umur: undefined, lokasi: '',
+      username: '', password: ''
     });
     setAthleteForm({
       Nama: '', Foto: '', umur: undefined, kategori: '',
@@ -87,7 +100,6 @@ export default function AdminPage() {
     setShowForm(false);
   };
 
-  // Upload foto ke Supabase Storage
   const uploadPhoto = async (file: File): Promise<string> => {
     const fileExt = file.name.split('.').pop();
     const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
@@ -117,7 +129,6 @@ export default function AdminPage() {
     try {
       let photoUrl = activeTab === 'pelatih' ? coachForm.Foto : athleteForm.Foto;
 
-      // Upload foto baru jika ada file yang dipilih
       if (selectedFile) {
         photoUrl = await uploadPhoto(selectedFile);
       }
@@ -154,7 +165,6 @@ export default function AdminPage() {
       loadAll();
     } catch (err: any) {
       alert('Gagal menyimpan: ' + err.message);
-      console.error(err);
     }
   };
 
@@ -174,7 +184,6 @@ export default function AdminPage() {
     setShowForm(true);
   };
 
-  
   const handleDeleteCoach = async (id: string | number) => {
     if (!confirm('Yakin ingin menghapus pelatih ini?')) return;
     const { error } = await supabase.from('coach').delete().eq('id', id);
@@ -212,6 +221,11 @@ export default function AdminPage() {
     }));
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem('isAdminLoggedIn');
+    router.push('/login');
+  };
+
   const inputStyle: React.CSSProperties = {
     width: '100%',
     padding: '11px 14px',
@@ -235,13 +249,29 @@ export default function AdminPage() {
     }}>
       <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
 
-        <div style={{ marginBottom: '30px' }}>
-          <Link href="/" style={{ color: '#f87171', textDecoration: 'none', fontSize: '14px' }}>
-            ← Kembali ke Beranda
-          </Link>
-          <h1 style={{ margin: '8px 0 0', fontSize: '32px', fontWeight: 800 }}>
-            Admin <span style={{ color: '#C8102E' }}>Nanggala</span>
-          </h1>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px', flexWrap: 'wrap', gap: '15px' }}>
+          <div>
+            <Link href="/" style={{ color: '#f87171', textDecoration: 'none', fontSize: '14px' }}>
+              ← Kembali ke Beranda
+            </Link>
+            <h1 style={{ margin: '8px 0 0', fontSize: '32px', fontWeight: 800 }}>
+              Admin <span style={{ color: '#C8102E' }}>Nanggala</span>
+            </h1>
+          </div>
+          <button
+            onClick={handleLogout}
+            style={{
+              background: 'rgba(200,16,46,0.15)',
+              border: '1px solid rgba(200,16,46,0.4)',
+              color: '#f87171',
+              padding: '10px 20px',
+              borderRadius: '10px',
+              cursor: 'pointer',
+              fontWeight: 600
+            }}
+          >
+            Logout
+          </button>
         </div>
 
         {/* TABS */}
@@ -295,7 +325,6 @@ export default function AdminPage() {
             </h2>
 
             <form onSubmit={handleSubmit}>
-              {/* Upload Foto */}
               <div style={{ marginBottom: 20 }}>
                 <label style={labelStyle}>Foto (Upload)</label>
                 <input
@@ -325,6 +354,14 @@ export default function AdminPage() {
                     <div>
                       <label style={labelStyle}>Spesialis</label>
                       <input type="text" value={coachForm.spesialis} onChange={e => setCoachForm({...coachForm, spesialis: e.target.value})} style={inputStyle} />
+                    </div>
+                    <div>
+                      <label style={labelStyle}>Username Login</label>
+                      <input type="text" value={coachForm.username || ''} onChange={e => setCoachForm({...coachForm, username: e.target.value})} style={inputStyle} placeholder="Username untuk login pelatih" />
+                    </div>
+                    <div>
+                      <label style={labelStyle}>Password Login</label>
+                      <input type="text" value={coachForm.password || ''} onChange={e => setCoachForm({...coachForm, password: e.target.value})} style={inputStyle} placeholder="Password untuk login pelatih" />
                     </div>
                     <div>
                       <label style={labelStyle}>Certificate (utama)</label>
@@ -430,6 +467,7 @@ export default function AdminPage() {
                       <div style={{ fontWeight: 700 }}>{coach.Nama}</div>
                       <div style={{ color: '#d4a017', fontSize: 13 }}>{coach.Certificate}</div>
                       <div style={{ color: '#a1a1aa', fontSize: 13 }}>{coach.spesialis}</div>
+                      {coach.username && <div style={{ color: '#86efac', fontSize: 12, marginTop: 4 }}>Username: {coach.username}</div>}
                     </div>
                     <div style={{ display: 'flex', gap: 8 }}>
                       <button onClick={() => handleEditCoach(coach)} style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', color: 'white', padding: '8px 14px', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}>Edit</button>

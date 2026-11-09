@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 
 interface Athlete {
   id: string | number;
@@ -47,6 +48,7 @@ interface Schedule {
 type TabType = 'latihan' | 'prestasi' | 'jadwal';
 
 export default function CoachPage() {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabType>('latihan');
   const [athletes, setAthletes] = useState<Athlete[]>([]);
   const [selectedAthlete, setSelectedAthlete] = useState<Athlete | null>(null);
@@ -83,6 +85,21 @@ export default function CoachPage() {
     jenis: 'Lead',
     deskripsi: ''
   });
+
+  // ==================== PROTEKSI LOGIN ====================
+  useEffect(() => {
+    const isCoachLoggedIn = localStorage.getItem('coachLoggedIn');
+    if (isCoachLoggedIn !== 'true') {
+      router.push('/login-coach');
+    }
+  }, [router]);
+
+  const handleLogout = () => {
+    localStorage.removeItem('coachLoggedIn');
+    localStorage.removeItem('coachData');
+    router.push('/login-coach');
+  };
+  // =======================================================
 
   useEffect(() => {
     loadAthletes();
@@ -284,19 +301,35 @@ export default function CoachPage() {
     }}>
       <div style={{ maxWidth: 1100, margin: '0 auto' }}>
 
-        <div style={{ marginBottom: 30 }}>
-          <Link href="/" style={{ color: '#f87171', textDecoration: 'none', fontSize: 14 }}>
-            ← Kembali ke Beranda
-          </Link>
-          <h1 style={{ margin: '8px 0 0', fontSize: 32, fontWeight: 800 }}>
-            Area <span style={{ color: '#C8102E' }}>Pelatih</span>
-          </h1>
-          <p style={{ color: '#a1a1aa', margin: '4px 0 0' }}>
-            Input data latihan, prestasi & jadwal
-          </p>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 30, flexWrap: 'wrap', gap: 15 }}>
+          <div>
+            <Link href="/" style={{ color: '#f87171', textDecoration: 'none', fontSize: 14 }}>
+              ← Kembali ke Beranda
+            </Link>
+            <h1 style={{ margin: '8px 0 0', fontSize: 32, fontWeight: 800 }}>
+              Area <span style={{ color: '#C8102E' }}>Pelatih</span>
+            </h1>
+            <p style={{ color: '#a1a1aa', margin: '4px 0 0' }}>
+              Input data latihan, prestasi & jadwal
+            </p>
+          </div>
+          <button
+            onClick={handleLogout}
+            style={{
+              background: 'rgba(200,16,46,0.15)',
+              border: '1px solid rgba(200,16,46,0.4)',
+              color: '#f87171',
+              padding: '10px 20px',
+              borderRadius: '10px',
+              cursor: 'pointer',
+              fontWeight: 600
+            }}
+          >
+            Logout
+          </button>
         </div>
 
-        {/* ===== DAFTAR ATLET (kartu, lebih jelas) ===== */}
+        {/* ===== DAFTAR ATLET ===== */}
         <div style={{ marginBottom: 28 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
             <h3 style={{ margin: 0 }}>Pilih Atlet</h3>
