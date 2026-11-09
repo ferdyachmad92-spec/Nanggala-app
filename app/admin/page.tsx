@@ -174,6 +174,7 @@ export default function AdminPage() {
     setShowForm(true);
   };
 
+  
   const handleDeleteCoach = async (id: string | number) => {
     if (!confirm('Yakin ingin menghapus pelatih ini?')) return;
     const { error } = await supabase.from('coach').delete().eq('id', id);
