@@ -105,6 +105,7 @@ export default function Home() {
           </div>
         </div>
 
+
         <Link href="/admin">
           <div style={{
             background: 'rgba(200,16,46,0.12)',
