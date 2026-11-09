@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import "./globals.css";
 
-export const metadata: Metadata = {
+export const metadata = {
   title: "Nanggala Climbing Club",
   description: "Aplikasi Monitoring Performa Atlet - Nanggala Climbing Club",
+  manifest: "/manifest.json",
   icons: {
     icon: "/logo.png",
+    apple: "/logo.png",
   },
 };
 
